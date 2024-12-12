@@ -1,82 +1,21 @@
+import { createDiv } from './module/createDiv.js';
+import { createInput } from './module/createInput.js';
+import { createTaskList } from './module/createTaskList.js';
+import { createTitle } from './module/createTitle.js';
+import { createTaskButton } from './module/createTaskButton.js';
+import { createConfirmModal } from './module/createConfirmModal.js';
+import { addTask } from './module/addTask.js'
+
 let arr = JSON.parse(localStorage.getItem("tasks")) || [
-    { task: "Задача 1", complited: "no" },
-    { task: "Задача 2", complited: "no" },
-    { task: "Задача 3", complited: "yes" }
+    { task: "Задача 1", complited: "0" },
+    { task: "Задача 2", complited: "0" },
+    { task: "Задача 3", complited: "1" }
 ];
 
 function saveTasksToLocalStorage() {
     localStorage.setItem("tasks", JSON.stringify(arr));
 }
 
-function createDiv() {
-    const todoContainer = document.createElement("div");
-    todoContainer.className = "todo-container";
-    return todoContainer;
-}
-
-function createTitle(text) {
-    const title = document.createElement("h1");
-    title.textContent = text;
-    return title;
-}
-
-function createInput(input) {
-    const taskInput = document.createElement("input");
-    taskInput.type = "text";
-    taskInput.id = "taskInput";
-    taskInput.placeholder = input;
-    return taskInput;
-}
-
-function createTaskButton(text) {
-    const addTaskButton = document.createElement("button");
-    addTaskButton.id = "addTaskButton";
-    addTaskButton.textContent = text;
-    return addTaskButton;
-}
-
-function createTaskList() {
-    const taskList = document.createElement("ul");
-    taskList.id = "taskList";
-    return taskList;
-}
-
-function createConfirmModal(message, onConfirm, onCancel) {
-    const modalOverlay = document.createElement("div");
-    modalOverlay.className = "modal-overlay";
-
-    const modal = document.createElement("div");
-    modal.className = "confirm-modal";
-
-    const modalMessage = document.createElement("p");
-    modalMessage.textContent = message;
-    modal.appendChild(modalMessage);
-
-    const buttonContainer = document.createElement("div");
-    buttonContainer.className = "button-container";
-
-    const confirmButton = document.createElement("button");
-    confirmButton.className = "confirm-button";
-    confirmButton.textContent = "Да";
-    confirmButton.addEventListener("click", () => {
-        onConfirm();
-        document.body.removeChild(modalOverlay);
-    });
-
-    const cancelButton = document.createElement("button");
-    cancelButton.className = "cancel-button";
-    cancelButton.textContent = "Нет";
-    cancelButton.addEventListener("click", () => {
-        onCancel();
-        document.body.removeChild(modalOverlay);
-    });
-
-    buttonContainer.appendChild(confirmButton);
-    buttonContainer.appendChild(cancelButton);
-    modal.appendChild(buttonContainer);
-    modalOverlay.appendChild(modal);
-    document.body.appendChild(modalOverlay);
-}
 
 function createApp() {
     const div = createDiv();
@@ -104,10 +43,10 @@ function createApp() {
         const taskText = input.value.trim();
         if (taskText === "") return;
 
-        arr.push({ task: taskText, complited: "no" });
+        arr.push({ task: taskText, complited: "0" });
         saveTasksToLocalStorage();
 
-        renderTask({ task: taskText, complited: "no" });
+        renderTask({ task: taskText, complited: "0" });
         input.value = "";
     }
 
@@ -117,7 +56,7 @@ function createApp() {
         const taskContent = document.createElement("span");
         taskContent.textContent = task.task;
         taskItem.appendChild(taskContent);
-        if (task.complited === "yes") {
+        if (task.complited === "1") {
             taskItem.classList.add("completed");
         }
 
@@ -136,11 +75,12 @@ function createApp() {
             });
         });
 
+
         taskContent.addEventListener("click", () => {
-            taskItem.classList.toggle("completed");
+            taskItem.classList.toggle("completed"); 
             arr = arr.map(item => {
                 if (item.task === task.task) {
-                    item.complited = taskItem.classList.contains("completed") ? "yes" : "no";
+                    item.complited = taskItem.classList.contains("completed") ? "1" : "0";
                 }
                 return item;
             });
