@@ -4,20 +4,39 @@ import { createTaskList } from './module/createTaskList.js';
 import { createTitle } from './module/createTitle.js';
 import { createTaskButton } from './module/createTaskButton.js';
 import { createConfirmModal } from './module/createConfirmModal.js';
-import { addTask } from './module/addTask.js'
 
-let arr = JSON.parse(localStorage.getItem("tasks")) || [
-    { task: "Задача 1", complited: "0" },
-    { task: "Задача 2", complited: "0" },
-    { task: "Задача 3", complited: "1" }
-];
 
-function saveTasksToLocalStorage() {
-    localStorage.setItem("tasks", JSON.stringify(arr));
-}
+
+async function getData() {
+    const url = "http://localhost:3000/";
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+  
+      const res = await response.json();
+      console.log(res);
+      return res;
+    } catch (error) {
+      console.error(error.message);
+    }
+  }
+
+  let arr = await getData();
+// let arr = JSON.parse(localStorage.getItem("tasks")) || [
+//     { task: "Задача 1", complited: "0" },
+//     { task: "Задача 2", complited: "0" },
+//     { task: "Задача 3", complited: "1" }
+// ];
+
+// function saveTasksToLocalStorage() {
+//     localStorage.setItem("tasks", JSON.stringify(arr));
+// }
 
 
 function createApp() {
+   
     const div = createDiv();
     document.body.appendChild(div);
 
@@ -44,7 +63,7 @@ function createApp() {
         if (taskText === "") return;
 
         arr.push({ task: taskText, complited: "0" });
-        saveTasksToLocalStorage();
+        // saveTasksToLocalStorage();
 
         renderTask({ task: taskText, complited: "0" });
         input.value = "";
@@ -69,7 +88,7 @@ function createApp() {
             createConfirmModal("Вы уверены, что хотите удалить эту задачу?", () => {
                 list.removeChild(taskItem);
                 arr = arr.filter(item => item.task !== task.task);
-                saveTasksToLocalStorage();
+                // saveTasksToLocalStorage();
             }, () => {
                 console.log("Удаление отменено");
             });
@@ -84,13 +103,17 @@ function createApp() {
                 }
                 return item;
             });
-            saveTasksToLocalStorage();
+            // saveTasksToLocalStorage();
         });
 
         list.appendChild(taskItem);
     }
 
-    arr.forEach(task => renderTask(task));
+
+
+      arr.forEach(task => renderTask(task));
+
 }
+
 
 createApp();
