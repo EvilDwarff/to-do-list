@@ -6,37 +6,68 @@ import { createTaskButton } from './module/createTaskButton.js';
 import { createConfirmModal } from './module/createConfirmModal.js';
 
 
+const API_URL = "http://localhost:3000/";
+
 
 async function getData() {
-    const url = "http://localhost:3000/";
     try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`);
-      }
-  
-      const res = await response.json();
-      console.log(res);
-      return res;
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch data. Status: ${response.status}`);
+        }
+        return await response.json();
     } catch (error) {
-      console.error(error.message);
+        console.error(`Error fetching tasks: ${error.message}`);
+        return [];
     }
-  }
-
-  let arr = await getData();
-// let arr = JSON.parse(localStorage.getItem("tasks")) || [
-//     { task: "Задача 1", complited: "0" },
-//     { task: "Задача 2", complited: "0" },
-//     { task: "Задача 3", complited: "1" }
-// ];
-
-// function saveTasksToLocalStorage() {
-//     localStorage.setItem("tasks", JSON.stringify(arr));
-// }
+}
 
 
-function createApp() {
-   
+async function saveTaskToDB(task) {
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(task),
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to save task. Status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error(`Error saving task: ${error.message}`);
+    }
+}
+
+
+async function updateTask(task) {
+    try {
+        const response = await fetch(`${API_URL}/${task.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ complited: task.complited }),
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to update task. Status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error(`Error updating task: ${error.message}`);
+    }
+}
+
+async function deleteTaskFromDB(taskId) {
+    try {
+        const response = await fetch(`${API_URL}/${taskId}`, { method: "DELETE" });
+        if (!response.ok) {
+            throw new Error(`Failed to delete task. Status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error(`Error deleting task: ${error.message}`);
+    }
+}
+
+
+async function createApp() {
     const div = createDiv();
     document.body.appendChild(div);
 
@@ -45,29 +76,15 @@ function createApp() {
 
     const input = createInput("Добавьте задачу");
     div.appendChild(input);
-    input.addEventListener("keypress", (event) => {
-        if (event.key === "Enter") {
-            addTask();
-        }
-    });
 
     const button = createTaskButton("Добавить");
     div.appendChild(button);
-    button.addEventListener("click", addTask);
 
     const list = createTaskList();
     div.appendChild(list);
 
-    function addTask() {
-        const taskText = input.value.trim();
-        if (taskText === "") return;
+    let arr = await getData();
 
-        arr.push({ task: taskText, complited: "0" });
-        // saveTasksToLocalStorage();
-
-        renderTask({ task: taskText, complited: "0" });
-        input.value = "";
-    }
 
     function renderTask(task) {
         const taskItem = document.createElement("li");
@@ -75,6 +92,7 @@ function createApp() {
         const taskContent = document.createElement("span");
         taskContent.textContent = task.task;
         taskItem.appendChild(taskContent);
+
         if (task.complited === "1") {
             taskItem.classList.add("completed");
         }
@@ -84,36 +102,51 @@ function createApp() {
         deleteButton.textContent = "Удалить";
         taskItem.appendChild(deleteButton);
 
-        deleteButton.addEventListener("click", () => {
-            createConfirmModal("Вы уверены, что хотите удалить эту задачу?", () => {
+      
+        deleteButton.addEventListener("click", async () => {
+            createConfirmModal("Вы уверены, что хотите удалить эту задачу?", async () => {
+                await deleteTaskFromDB(task.id); 
                 list.removeChild(taskItem);
-                arr = arr.filter(item => item.task !== task.task);
-                // saveTasksToLocalStorage();
-            }, () => {
-                console.log("Удаление отменено");
+                arr = arr.filter(item => item.id !== task.id);
             });
         });
 
-
-        taskContent.addEventListener("click", () => {
-            taskItem.classList.toggle("completed"); 
-            arr = arr.map(item => {
-                if (item.task === task.task) {
-                    item.complited = taskItem.classList.contains("completed") ? "1" : "0";
-                }
-                return item;
-            });
-            // saveTasksToLocalStorage();
+   
+        taskContent.addEventListener("click", async () => {
+            taskItem.classList.toggle("completed");
+            const isCompleted = taskItem.classList.contains("completed") ? "1" : "0";
+            task.complited = isCompleted;
+            await updateTask(task); 
         });
 
         list.appendChild(taskItem);
     }
 
 
+    async function addTask() {
+        const taskText = input.value.trim();
+        if (!taskText) return;
 
-      arr.forEach(task => renderTask(task));
+        const newTask = { task: taskText, complited: "0" };
+        const savedTask = await saveTaskToDB(newTask); 
+        arr.push(savedTask);
 
+        renderTask(savedTask);
+        input.value = "";
+    }
+
+    
+    input.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            addTask();
+        }
+    });
+
+    button.addEventListener("click", addTask);
+
+
+    arr.forEach(task => renderTask(task));
 }
 
-
 createApp();
+
