@@ -134,7 +134,7 @@ function createApp() {
         deleteButton.addEventListener("click", () => {
             createConfirmModal("Вы уверены, что хотите удалить эту задачу?", () => {
                 list.removeChild(taskItem);
-                const taskT = taskItem.textContent.slice(0, -7); 
+                const taskT = taskContent.textContent; 
                 console.log(taskItem);
                 console.log(taskT);
                 deleteTaskFromDB(taskT);
